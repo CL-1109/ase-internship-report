@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>元智大學資訊管理學系 第三十一屆專業實習競賽報告｜日月光 (H2)｜林信琦</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', '"Inter"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            ase: {
+              dark: '#070D19',
+              navy: '#0D172A',
+              card: '#13203B',
+              border: '#1E335C',
+              cyan: '#00E5FF',
+              blue: '#3B82F6',
+              teal: '#14B8A6',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #070D19;
+      color: #E2E8F0;
+      overflow-x: hidden;
+    }
+
+    /* 晶圓電路網格背景 */
+    .wafer-grid {
+      background-image:
+        linear-gradient(to right, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+
+    .glass-card {
+      background: rgba(19, 32, 59, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      transition: all 0.25s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(0, 229, 255, 0.45);
+      box-shadow: 0 10px 30px -10px rgba(0, 229, 255, 0.15);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 24px rgba(0, 229, 255, 0.35);
+    }
+
+    /* 滾動進場動畫 */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s ease-out, transform 0.65s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 流動光點動畫 */
+    @keyframes pulseFlow {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.04); opacity: 1; box-shadow: 0 0 22px rgba(0, 229, 255, 0.55); }
+    }
+    .node-active {
+      animation: pulseFlow 1.8s infinite ease-in-out;
+      border-color: #00E5FF !important;
+      background: rgba(0, 229, 255, 0.15) !important;
+    }
+
+    /* 自訂捲軸 */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #070D19; }
+    ::-webkit-scrollbar-thumb { background: #1E335C; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00E5FF; }
+  </style>
+</head>
+<body class="wafer-grid antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- 頂部固定導覽列 -->
+  <header class="fixed top-0 inset-x-0 z-50 bg-ase-dark/85 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition">
+          ASE
+        </div>
+        <div>
+          <div class="text-xs text-cyan-400 font-mono tracking-wider">YZU IM × ASE</div>
+          <div class="text-sm font-bold text-white tracking-tight">第31屆專業實習競賽報告</div>
+        </div>
+      </a>
+
+      <!-- 桌機版導覽連結 -->
+      <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <a href="#company" class="hover:text-cyan-400 transition">企業與產業地位</a>
+        <a href="#location" class="hover:text-cyan-400 transition">通勤優勢與環境</a>
+        <a href="#av-showcase" class="hover:text-cyan-400 transition">資料流互動導覽</a>
+        <a href="#projects" class="hover:text-cyan-400 transition">七大實戰系統</a>
+        <a href="#skills" class="hover:text-cyan-400 transition">技術能力圖表</a>
+      </nav>
+
+      <!-- 手機選單按鈕 -->
+      <div class="flex items-center lg:hidden">
+        <button id="mobileMenuBtn" class="p-2 rounded-lg bg-slate-800 text-slate-200 hover:text-cyan-400">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 手機版下拉選單 -->
+    <div id="mobileMenu" class="hidden lg:hidden bg-ase-navy border-b border-slate-800 px-4 py-3 space-y-2 text-sm">
+      <a href="#company" class="block py-1.5 text-slate-300 hover:text-cyan-400">一、企業概述與產業地位</a>
+      <a href="#location" class="block py-1.5 text-slate-300 hover:text-cyan-400">二、交通區位與實習環境</a>
+      <a href="#av-showcase" class="block py-1.5 text-slate-300 hover:text-cyan-400">三、系統架構資料流導覽</a>
+      <a href="#projects" class="block py-1.5 text-slate-300 hover:text-cyan-400">四、實習期間完成之七大專案</a>
+      <a href="#skills" class="block py-1.5 text-slate-300 hover:text-cyan-400">五、核心技術雷達與成效分析</a>
+    </div>
+  </header>
+
+  <!-- HERO 首頁銘牌區塊 -->
+  <section id="hero" class="relative pt-28 pb-20 lg:pt-36 lg:pb-28 overflow-hidden">
+    <!-- 背景光暈 -->
+    <div class="absolute top-20 left-1/2 -translate-x-1/2 w-[780px] h-[360px] bg-cyan-500/15 blur-[130px] rounded-full pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs sm:text-sm font-medium mb-6">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          元智大學資訊管理學系｜第三十一屆專業實習競賽報告
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight mb-6 glow-text">
+          半導體智慧製造 IT 自動化實踐<br />
+          <span class="bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">
+            研究主題：自動化處理
+          </span>
+        </h1>
+
+        <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
+          深入全球封測龍頭日月光中壢廠，結合 <span class="text-cyan-300 font-semibold">C# 系統開發、SQL 資料庫管理、FTP/SFTP 自動化傳輸</span> 與企業級生成式 AI 助手「達哥」，打造高可靠度的半導體資料流與防呆機制。
+        </p>
+
+        <!-- 競賽規定首頁基本資訊卡片 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 text-left mb-10">
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="bookmark" class="w-3.5 h-3.5 text-cyan-400"></i>研究主題
+            </div>
+            <div class="text-base font-bold text-white">日月光</div>
+          </div>
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="hash" class="w-3.5 h-3.5 text-cyan-400"></i>公司代號
+            </div>
+            <div class="text-base font-mono font-bold text-cyan-300">H2</div>
+          </div>
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-400"></i>實習單位
+            </div>
+            <div class="text-base font-bold text-white">日月光（中壢廠 IT 部門FA_SD1）</div>
+          </div>
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-cyan-400"></i>輔導老師
+            </div>
+            <div class="text-base font-bold text-white">詹前隆 教授</div>
+          </div>
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-cyan-400"></i>學生姓名
+            </div>
+            <div class="text-base font-bold text-white">林信琦</div>
+          </div>
+          <div class="glass-card p-4 rounded-xl">
+            <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+              <i data-lucide="id-card" class="w-3.5 h-3.5 text-cyan-400"></i>學號
+            </div>
+            <div class="text-base font-mono font-bold text-cyan-300">1121621</div>
+          </div>
+        </div>
+
+        <!-- 互動操作與外部相關連結 -->
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="#projects" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm sm:text-base shadow-lg shadow-cyan-500/25 hover:brightness-110 transition flex items-center gap-2">
+            <i data-lucide="cpu" class="w-4 h-4"></i>
+            探索七大實戰專案
+          </a>
+          <a href="#av-showcase" class="px-6 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-white font-semibold text-sm sm:text-base transition flex items-center gap-2">
+            <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-cyan-400"></i>
+            互動點擊架構流程
+          </a>
+          <a href="https://www.aseglobal.com/ch/home/" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-300 text-sm transition flex items-center gap-1.5">
+            <span>日月光投控官網</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+          <a href="https://www.mis.yzu.edu.tw/" target="_blank" rel="noopener noreferrer" class="px-4 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-cyan-300 text-sm transition flex items-center gap-1.5">
+            <span>元智資管系官網</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第一部分：企業基本概述與產業地位 -->
+  <section id="company" class="py-16 border-t border-slate-800/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-12 reveal">
+        <div class="text-cyan-400 font-mono text-xs uppercase tracking-widest mb-2">01 / COMPANY PROFILE & INDUSTRY LEADERSHIP</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">日月光投資控股 (ASE Technology Holding) 企業概覽</h2>
+        <p class="text-slate-400 mt-2 max-w-3xl">全球半導體封裝與測試製造服務龍頭，以完整一條龍服務與世界級智慧燈塔工廠引領半導體製造創新。</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 reveal">
+        <!-- 卡片 1 -->
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400 mb-5">
+            <i data-lucide="globe" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-3">全球 OSAT 產業龍頭</h3>
+          <ul class="space-y-2.5 text-sm text-slate-300 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-cyan-400 mt-1">▹</span>
+              <span><strong>專業委外封測代工市佔第一：</strong>全球規模最大的半導體封裝與測試製造服務商。</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-cyan-400 mt-1">▹</span>
+              <span><strong>多元垂直整合量能：</strong>透過旗下環旭電子 (USI) 提供電子代工服務 (EMS)，具備完整跨領域製造實力。</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400 mb-5">
+            <i data-lucide="layers" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-3">先進封裝與 Turnkey 服務</h3>
+          <ul class="space-y-2.5 text-sm text-slate-300 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-blue-400 mt-1">▹</span>
+              <span><strong>VIPack™ 先進封裝平台：</strong>因應 AI 與 HPC 需求，深耕 2.5D/3D IC、扇出型封裝 (Fan-Out) 與系統級封裝 (SiP)。</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-blue-400 mt-1">▹</span>
+              <span><strong>完整一條龍服務：</strong>涵蓋晶圓凸塊 (Bumping)、晶圓測試 (Wafer Probe) 至最終測試 (Final Test) 與系統組裝。</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 卡片 3 -->
+        <div class="glass-card p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-teal-500/15 border border-teal-400/30 flex items-center justify-center text-teal-400 mb-5">
+            <i data-lucide="award" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-3">全球燈塔工廠與 ESG 標竿</h3>
+          <ul class="space-y-2.5 text-sm text-slate-300 leading-relaxed">
+            <li class="flex items-start gap-2">
+              <span class="text-teal-400 mt-1">▹</span>
+              <span><strong>WEF 全球燈塔工廠認證：</strong>高雄廠與中壢廠皆獲世界經濟論壇評選，高度導入 AI 智慧製造與自動化物流。</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-teal-400 mt-1">▹</span>
+              <span><strong>道瓊永續指數 (DJSI) 領導者：</strong>連續多年入選產業領導者，推動低碳製造與循環經濟。</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第二部分：工作介紹與工作內容大綱（含圖表與地圖連結） -->
+  <section id="location" class="py-16 border-t border-slate-800/70 bg-ase-navy/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-12 reveal">
+        <div class="text-cyan-400 font-mono text-xs uppercase tracking-widest mb-2">02 / COMMUTE ADVANTAGE & WORKFLOW OVERVIEW</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">實習區位優勢、一對一導師制與企業 AI 協作</h2>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-8 items-stretch reveal">
+        <!-- 左側：通勤時間數據圖表 -->
+        <div class="lg:col-span-6 glass-card p-6 rounded-2xl flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-5 h-5 text-cyan-400"></i>
+                學業與實習雙贏：極致通勤距離對比
+              </h3>
+              <a href="https://www.google.com/maps/dir/元智大學/日月光半導體製造股份有限公司中壢廠" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 transition">
+                <span>開啟 Google Maps 路線</span>
+                <i data-lucide="external-link" class="w-3 h-3"></i>
+              </a>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+              日月光中壢廠距離元智大學僅約 <span class="text-cyan-300 font-bold">1.6 公里（車程約 6～7 分鐘）</span>，鄰近內壢火車站與 Ubike 站點，相較往返台北或竹科大幅節省每日通勤時間，完美兼顧回校修課與實習表現。
+            </p>
+          </div>
+
+          <div class="relative h-64 w-full">
+            <canvas id="commuteChart"></canvas>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap gap-3 text-xs text-slate-400">
+            <span class="px-2.5 py-1 rounded bg-slate-800/80 text-slate-200">距離元智大學：1.6 km</span>
+            <span class="px-2.5 py-1 rounded bg-slate-800/80 text-slate-200">台北車站搭台鐵至內壢：約 40 分鐘</span>
+            <span class="px-2.5 py-1 rounded bg-slate-800/80 text-slate-200">免騎機車：Ubike / 步行即可抵達</span>
+          </div>
+        </div>
+
+        <!-- 右側：工作內容大綱與 AI 賦能 -->
+        <div class="lg:col-span-6 glass-card p-6 rounded-2xl flex flex-col justify-between space-y-6">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+              <i data-lucide="bot" class="w-5 h-5 text-cyan-400"></i>
+              部門技術棧與「達哥」企業生成式 AI 賦能
+            </h3>
+
+            <div class="space-y-4">
+              <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-700/70">
+                <div class="text-sm font-bold text-cyan-300 mb-1">1. 入職前自主技術強化 (C# & Database)</div>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                  面試階段掌握部門核心技術為 <strong>C# 應用程式開發</strong>與 <strong>SQL 資料庫管理</strong>後，於正式報到前完成語法與資料庫查詢自主演練，無縫銜接專案實作。
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-700/70">
+                <div class="text-sm font-bold text-blue-300 mb-1">2. 一對一資深導師制度 (Mentor Program)</div>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                  入職後由資深正職工程師一對一指導，快速熟悉半導體測試資料結構 (STDF/XML)、測試區 (QAS) 與正式區 (PROD) 佈署規範，大幅縮短適應期。
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-700/70">
+                <div class="text-sm font-bold text-teal-300 mb-1">3. 內網資安環境下的「達哥」AI 協作除錯</div>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                  廠區採高規格內網資安隔離，同時引進整合 <strong>GPT 與 Gemini</strong> 的企業級生成式 AI 平台「<strong>達哥</strong>」。遇到基礎語法或邏輯問題時，先透過 AI 進行第一線檢索與程式碼雛形產出，再進行嚴謹人工審核，顯著降低團隊溝通成本。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第三部分：直接點擊式互動資料流架構導覽 -->
+  <section id="av-showcase" class="py-16 border-t border-slate-800/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-10 reveal">
+        <div class="text-cyan-400 font-mono text-xs uppercase tracking-widest mb-2">03 / INTERACTIVE ARCHITECTURE WALKTHROUGH</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">半導體資料流與自動化系統「互動架構導覽」</h2>
+        <p class="text-slate-400 mt-1 text-sm sm:text-base">直接點擊下方任意階段卡片，即可切換查看各步驟的詳細運作解說與進度狀態。</p>
+      </div>
+
+      <!-- 互動架構外框 -->
+      <div class="glass-card rounded-2xl overflow-hidden border border-cyan-500/30 shadow-2xl reveal">
+        <!-- 頂部狀態列 -->
+        <div class="bg-slate-900/90 px-5 py-3 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+            <span class="ml-2 text-slate-400">ASE_DC_Pipeline_Visualizer (Click Any Node to Inspect)</span>
+          </div>
+          <div id="avTimer" class="text-cyan-400 font-bold">STAGE 1 / 5</div>
+        </div>
+
+        <!-- 可直接點擊的五階段卡片舞台 -->
+        <div class="p-6 sm:p-10 bg-gradient-to-b from-slate-950/90 to-ase-navy/90">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+            <!-- Stage 1 -->
+            <button type="button" data-stage="1" id="stage-1" class="stage-node node-active cursor-pointer p-4 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-cyan-400 text-center transition-all duration-300 flex flex-col justify-center">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-slate-800 flex items-center justify-center text-cyan-400">
+                <i data-lucide="file-search" class="w-5 h-5"></i>
+              </div>
+              <div class="text-xs font-mono text-cyan-400 mb-1">STEP 01</div>
+              <div class="text-sm font-bold text-white">需求表單與 DB 檢索</div>
+              <div class="text-xs text-slate-400 mt-1">確認客戶歷史紀錄與 FTP 連線測試</div>
+            </button>
+
+            <!-- Stage 2 -->
+            <button type="button" data-stage="2" id="stage-2" class="stage-node cursor-pointer p-4 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-cyan-400 text-center transition-all duration-300 flex flex-col justify-center">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-slate-800 flex items-center justify-center text-blue-400">
+                <i data-lucide="code-2" class="w-5 h-5"></i>
+              </div>
+              <div class="text-xs font-mono text-blue-400 mb-1">STEP 02</div>
+              <div class="text-sm font-bold text-white">VS XML 與 AI 輔助</div>
+              <div class="text-xs text-slate-400 mt-1">設定排除規則 (CORR/txt) 並人工審核</div>
+            </button>
+
+            <!-- Stage 3 -->
+            <button type="button" data-stage="3" id="stage-3" class="stage-node cursor-pointer p-4 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-cyan-400 text-center transition-all duration-300 flex flex-col justify-center">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-slate-800 flex items-center justify-center text-indigo-400">
+                <i data-lucide="scan-line" class="w-5 h-5"></i>
+              </div>
+              <div class="text-xs font-mono text-indigo-400 mb-1">STEP 03</div>
+              <div class="text-sm font-bold text-white">FTPSCAN 掃描備份</div>
+              <div class="text-xs text-slate-400 mt-1">測試區檔案掃描進 WORKSPACE</div>
+            </button>
+
+            <!-- Stage 4 -->
+            <button type="button" data-stage="4" id="stage-4" class="stage-node cursor-pointer p-4 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-cyan-400 text-center transition-all duration-300 flex flex-col justify-center">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-slate-800 flex items-center justify-center text-teal-400">
+                <i data-lucide="folder-sync" class="w-5 h-5"></i>
+              </div>
+              <div class="text-xs font-mono text-teal-400 mb-1">STEP 04</div>
+              <div class="text-sm font-bold text-white">FILEUPDATE & DC_FILTER</div>
+              <div class="text-xs text-slate-400 mt-1">轉移至 HOTFILES 並派送目標路徑</div>
+            </button>
+
+            <!-- Stage 5 -->
+            <button type="button" data-stage="5" id="stage-5" class="stage-node cursor-pointer p-4 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-cyan-400 text-center transition-all duration-300 flex flex-col justify-center">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              </div>
+              <div class="text-xs font-mono text-emerald-400 mb-1">STEP 05</div>
+              <div class="text-sm font-bold text-white">ClickOnce 驗證與 UTR</div>
+              <div class="text-xs text-slate-400 mt-1">確認 Success 狀態並產出測試報告</div>
+            </button>
+          </div>
+
+          <!-- 即時階段解說列 -->
+          <div class="mt-8 p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-end gap-1 h-5">
+                <span class="w-1 bg-cyan-400 h-2"></span>
+                <span class="w-1 bg-cyan-400 h-4"></span>
+                <span class="w-1 bg-cyan-400 h-3"></span>
+                <span class="w-1 bg-cyan-400 h-5"></span>
+              </div>
+              <p id="avSubtitle" class="text-sm text-cyan-200 font-medium">
+                【階段 1/5】檢視客戶需求表單，查詢資料庫歷史紀錄並測試遠端 FTP 連線是否暢通。
+              </p>
+            </div>
+            <div class="w-full sm:w-48 bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div id="avProgressBar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-full w-1/5 transition-all duration-300"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第四部分：實習期間完成之七大實戰專案（可互動切換與模擬器） -->
+  <section id="projects" class="py-16 border-t border-slate-800/70 bg-ase-navy/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-10 reveal">
+        <div class="text-cyan-400 font-mono text-xs uppercase tracking-widest mb-2">04 / INTERNSHIP ACHIEVEMENTS & INTERACTIVE DEMOS</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">實習期間完成工作內容與系統工具開發</h2>
+        <p class="text-slate-400 mt-2">點擊下方標籤切換各專案詳情，並可直接在網頁上操作「壓縮工具模擬器」、「Form 2DID 防呆刪除演練」與「Git Hook 攔截演練」。</p>
+      </div>
+
+      <!-- 專案分頁按鈕 -->
+      <div class="flex flex-wrap gap-2 mb-8 reveal" id="projectTabs">
+        <button data-tab="tab-dc" class="tab-btn active px-4 py-2.5 rounded-xl text-sm font-bold bg-cyan-500 text-slate-950 shadow-md transition">
+          1. DC 資料傳輸與 UTR 報告
+        </button>
+        <button data-tab="tab-zip" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          2. C# 壓縮搬移工具 (v1.0→v1.7)
+        </button>
+        <button data-tab="tab-check" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          3. SQL & FTP 檢查工具
+        </button>
+        <button data-tab="tab-colorbin" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          4. ClickOnce ColorBin 模組
+        </button>
+        <button data-tab="tab-tally" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          5. Tally 晶圓解析三步驟
+        </button>
+        <button data-tab="tab-form2did" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          6. Form 2DID 功能優化
+        </button>
+        <button data-tab="tab-2did-git" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700 transition">
+          7. eMap+ Git Hook 自動檢查
+        </button>
+      </div>
+
+      <!-- TAB 1: DC 資料傳輸與 UTR -->
+      <div id="tab-dc" class="tab-panel glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-2 gap-8">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-mono mb-3">DATA COLLECTION & UTR VERIFICATION</span>
+            <h3 class="text-2xl font-bold text-white mb-4">DC 客戶資料下載/備份自動化與 UTR 測試報告</h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-5">
+              依據客戶需求表單進行資料自動下載或備份設定。從資料庫查詢歷史設定、測試 FTP 路徑連通性，於 Visual Studio 撰寫或擴充 XML 設定檔（搭配 AI 輔助生成後進行人工嚴格校驗），最後透過 ClickOnce 監控執行狀態並撰寫完整 UTR 報告。
+            </p>
+            <div class="space-y-3 text-sm">
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/80">
+                <strong class="text-cyan-300">過濾規則設定：</strong>精準排除特定前綴（如 <code>CORR</code>）或副檔名（如 <code>.txt</code>），建立專屬 <code>OPTION</code> 參數。
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/80">
+                <strong class="text-blue-300">三階段傳輸管線：</strong>
+                <code>FTPSCAN</code>（進 WORKSPACE 備份）→ <code>FILEUPDATE</code>（轉移至 HOTFILES）→ <code>DC_FILTER</code>（派送至客戶指定目錄）。
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/80">
+                <strong class="text-emerald-300">UTR 品質保證文件：</strong>完整收錄 SQL 查詢/新增語法、測試前後截圖與檔案路徑比對佐證。
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/90 rounded-xl p-5 border border-slate-800 font-mono text-xs flex flex-col justify-between">
+            <div>
+              <div class="text-slate-400 mb-3 flex items-center justify-between">
+                <span>// DC_OPTION_CONFIG_SAMPLE.xml (去識別化範例)</span>
+                <span class="text-emerald-400">STATUS: SUCCESS</span>
+              </div>
+              <pre class="text-cyan-200 overflow-x-auto leading-relaxed bg-slate-900/80 p-4 rounded-lg border border-slate-800"><code>&lt;DC_Config Plant="CL_H2" Customer="CLIENT_DEMO"&gt;
+  &lt;TransferMode&gt;DOWNLOAD_AND_BACKUP&lt;/TransferMode&gt;
+  &lt;FilterRules&gt;
+    &lt;ExcludePrefix&gt;CORR_&lt;/ExcludePrefix&gt;
+    &lt;ExcludeExtension&gt;.txt&lt;/ExcludeExtension&gt;
+  &lt;/FilterRules&gt;
+  &lt;Pipeline&gt;
+    &lt;Step1&gt;FTPSCAN -&gt; /WORKSPACE/STDF/&lt;/Step1&gt;
+    &lt;Step2&gt;FILEUPDATE -&gt; /HOTFILES/&lt;/Step2&gt;
+    &lt;Step3&gt;DC_FILTER -&gt; /TARGET_DEST/&lt;/Step3&gt;
+  &lt;/Pipeline&gt;
+&lt;/DC_Config&gt;</code></pre>
+            </div>
+            <div class="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+              <strong>實習洞察：</strong>AI 生成 XML 程式碼雖快，但偶爾會出現標籤閉合或正規表示法偏差，透過「AI 初稿 + 人工逐行審核 + QAS 測試驗證」可將上線錯誤率降至零。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: C# 壓縮搬移工具 (含互動模擬器) -->
+      <div id="tab-zip" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-12 gap-8">
+          <div class="lg:col-span-6 space-y-4">
+            <span class="inline-block px-3 py-1 rounded-full bg-blue-500/15 text-blue-300 text-xs font-mono">C# WINFORMS TOOLING · v1.0.0 → v1.7.0</span>
+            <h3 class="text-2xl font-bold text-white">C# 自動化壓縮與 FTP 週別歸檔搬移工具</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              為解決伺服器多路徑大量測試檔案導致儲存空間不足的問題，主導開發並迭代 C# 壓縮搬移工具（從 v1.3 接手演進至 <strong>v1.7.0</strong>）。支援逐日分批搬移避免超時斷線、ISO 週別 (<code>YYYYWW</code>) 自動建夾分類、Proxy 繞過與完整執行 Log 紀錄。
+            </p>
+
+            <!-- 版本演進時間軸 -->
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+              <div class="font-bold text-cyan-300 mb-2">版本迭代紀錄 (Changelog Highlights)</div>
+              <div class="flex justify-between text-slate-300 border-b border-slate-800 pb-1">
+                <span class="font-mono text-cyan-400">v1.3.0</span>
+                <span>導入 ISO 週別歸檔邏輯 (YYYYWW) 與 Unknown 資料夾遞迴掃描</span>
+              </div>
+              <div class="flex justify-between text-slate-300 border-b border-slate-800 pb-1">
+                <span class="font-mono text-cyan-400">v1.4.0</span>
+                <span>新增 FTP 遠端傳輸、繞過 Proxy 連線與自動 Log 命名</span>
+              </div>
+              <div class="flex justify-between text-slate-300 border-b border-slate-800 pb-1">
+                <span class="font-mono text-cyan-400">v1.6.0</span>
+                <span>優化 FTP 錯誤重試機制與網路路徑傳輸穩定度</span>
+              </div>
+              <div class="flex justify-between text-slate-200 font-semibold">
+                <span class="font-mono text-emerald-400">v1.7.0</span>
+                <span>解決檔名包含中文或特殊符號導致識別錯誤之問題</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 互動壓縮工具模擬器 -->
+          <div class="lg:col-span-6 bg-slate-950/90 p-5 rounded-xl border border-slate-700">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <i data-lucide="archive" class="w-4 h-4 text-cyan-400"></i>
+                <span class="font-bold text-white text-sm">壓縮工具 v1.7.0 互動模擬介面</span>
+              </div>
+              <span class="text-xs font-mono text-emerald-400">FTP READY</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+              <div>
+                <label class="text-slate-400 block mb-1">來源資料夾路徑</label>
+                <input type="text" value="/EDA/CP_QC/STDF_DATA/" readonly class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 font-mono" />
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">目的歸檔路徑 (ISO Week)</label>
+                <input type="text" value="ftp://ARCHIVE_SRV/2026W20/" readonly class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-cyan-300 font-mono" />
+              </div>
+              <div>
+                <label class="text-slate-400 block mb-1">搬移天數區間 (逐日分批防超時)</label>
+                <select id="simDays" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-white">
+                  <option value="3">3 天批次 (約 360 筆 STDF)</option>
+                  <option value="7" selected>7 天批次 (約 840 筆 STDF)</option>
+                  <option value="14">14 天批次 (約 1,680 筆 STDF)</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button id="runZipSimBtn" class="w-full py-1.5 px-3 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                  <span>執行壓縮與 FTP 搬移</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center bg-slate-900/90 p-2.5 rounded-lg border border-slate-800 text-xs font-mono mb-3">
+              <div>已完成：<span id="zipDone" class="text-emerald-400 font-bold">0</span></div>
+              <div>失敗：<span class="text-rose-400 font-bold">0</span></div>
+              <div>預估剩餘：<span id="zipEta" class="text-cyan-300 font-bold">--</span></div>
+            </div>
+
+            <div id="zipLogBox" class="h-32 overflow-y-auto bg-slate-900 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
+              <div class="text-slate-500">[SYSTEM] 等待執行指令... 支援中文檔名編碼自動轉換與週別歸檔。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SQL & FTP 檢查工具 -->
+      <div id="tab-check" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-teal-500/15 text-teal-300 text-xs font-mono mb-3">AUTOMATED INTEGRITY AUDITOR</span>
+            <h3 class="text-2xl font-bold text-white mb-4">SQL 與 FTP 跨平台檔案一致性檢查工具</h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              針對指定 <code>Lot</code>、<code>Wafer_Lot</code> 與 <code>CREATE_TIME</code> 時間區段，自動串接 SQL 資料庫與遠端 FTP 伺服器，一次完成五大 Golden Case 稽核指標，取代人工逐筆比對的繁瑣作業。
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-700 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Case 1</span>
+                <span>檔案是否真實存在</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-700 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Case 2</span>
+                <span>修改時間是否一致</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-700 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Case 3</span>
+                <span>檔案大小 (Bytes) 是否一致</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-700 flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Case 4</span>
+                <span>FTP 路徑存取權限狀態</span>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-700 flex items-center gap-2 sm:col-span-2">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">Case 5</span>
+                <span>實際儲存路徑與資料庫紀錄是否完全吻合</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-950/90 p-5 rounded-xl border border-slate-800">
+            <div class="text-xs font-mono text-cyan-400 mb-3">GOLDEN CASE VERIFICATION MATRIX</div>
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-700 text-slate-400">
+                  <th class="py-2">驗證項目 (Impact AMS Event)</th>
+                  <th class="py-2">比對來源</th>
+                  <th class="py-2 text-right">測試結果</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                  <td class="py-2.5">1. 檔案是否存在</td>
+                  <td class="py-2.5 font-mono text-slate-400">FTP Directory</td>
+                  <td class="py-2.5 text-right text-emerald-400 font-bold">PASS (Case 1)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5">2. 修改時間是否一致</td>
+                  <td class="py-2.5 font-mono text-slate-400">DB vs FTP Timestamp</td>
+                  <td class="py-2.5 text-right text-emerald-400 font-bold">PASS (Case 2)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5">3. 檔案大小是否一致</td>
+                  <td class="py-2.5 font-mono text-slate-400">Byte-Level Check</td>
+                  <td class="py-2.5 text-right text-emerald-400 font-bold">PASS (Case 3)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5">4. FTP 路徑存取狀態</td>
+                  <td class="py-2.5 font-mono text-slate-400">Port 22 SFTP Handshake</td>
+                  <td class="py-2.5 text-right text-emerald-400 font-bold">PASS (Case 4)</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5">5. 檔案路徑一致性</td>
+                  <td class="py-2.5 font-mono text-slate-400">Path Regex Match</td>
+                  <td class="py-2.5 text-right text-emerald-400 font-bold">PASS (Case 5)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: ClickOnce ColorBin 模組 -->
+      <div id="tab-colorbin" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-300 text-xs font-mono mb-3">CLICKONCE UI & DATABASE CRUD</span>
+            <h3 class="text-2xl font-bold text-white mb-4">ClickOnce 平台新增 ColorBin 視覺化管理模組</h3>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              於既有的 <code>FormACLWAFER</code> ClickOnce 系統中擴充 <strong>ColorBin</strong> 分頁功能，直接串接後端資料庫，讓工程師能快速檢索並維護晶圓圖 (Wafer Map) 的顏色與 Bin 對應規則。
+            </p>
+            <ul class="space-y-2.5 text-sm text-slate-300">
+              <li class="flex items-center gap-2"><i data-lucide="search" class="w-4 h-4 text-cyan-400"></i><strong>多條件快速篩選：</strong>支援 <code>PLANT</code>、<code>CUSTOMER</code> 輸入框與 <code>Create Time</code> 時間區間查詢。</li>
+              <li class="flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-cyan-400"></i><strong>完整 CRUD 操作：</strong>資料表支援即時新增、修改與刪除並同步回寫資料庫。</li>
+              <li class="flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-cyan-400"></i><strong>一鍵匯出 Excel/CSV：</strong>方便工程師進行離線報表分析與跨部門核對。</li>
+            </ul>
+          </div>
+
+          <!-- 模擬 Wafer ColorBin 視覺圖 -->
+          <div class="bg-slate-950/90 p-5 rounded-xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono text-cyan-300">ColorBin Wafer Map Preview</span>
+              <div class="flex gap-2 text-[11px]">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block"></span>Bin 1 (Pass)</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"></span>Bin 5 (Retest)</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block"></span>Bin 9 (Fail)</span>
+              </div>
+            </div>
+            <div id="waferMapGrid" class="grid grid-cols-12 gap-1 p-3 bg-slate-900 rounded-lg border border-slate-800"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: Tally 晶圓解析三步驟 -->
+      <div id="tab-tally" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-mono mb-3">WAFER TALLY EXECUTION PIPELINE</span>
+        <h3 class="text-2xl font-bold text-white mb-6">Tally 測試數據解析與良率驗證標準三步驟</h3>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-700">
+            <div class="text-xs font-mono text-cyan-400 mb-2">STEP 01 · DB CONFIGURATION</div>
+            <h4 class="text-lg font-bold text-white mb-2">資料庫解析規則確認</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              前往 Database 設定表核對 <code>Tester</code> 與 <code>Customer</code> 對應的解析規則、Pattern 比對邏輯以及 Bin 分群設定是否完整建置。
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-700">
+            <div class="text-xs font-mono text-blue-400 mb-2">STEP 02 · TRIGGER EVENT</div>
+            <h4 class="text-lg font-bold text-white mb-2">執行 InsertEventAndTrigger</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              傳入 <code>Lot</code>、<code>Wafer</code> 與 <code>Insertion</code> 關鍵參數觸發事件，驅動後端系統自動執行 Tally 晶圓數據解析引擎。
+            </p>
+          </div>
+
+          <div class="p-5 rounded-xl bg-slate-900/90 border border-slate-700">
+            <div class="text-xs font-mono text-emerald-400 mb-2">STEP 03 · BIN VERIFICATION</div>
+            <h4 class="text-lg font-bold text-white mb-2">HW/SW BIN 寫入與數量核對</h4>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              待系統回傳 <code>Success</code> 後，查詢資料庫確認 <strong>HW BIN</strong> 與 <strong>SW BIN</strong> 是否正確寫入，並驗證 Pass/Fail 數量與客戶需求單完全一致。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: Form 2DID 功能優化 -->
+      <div id="tab-form2did" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-12 gap-8">
+          <!-- 左側：四大功能說明 -->
+          <div class="lg:col-span-7 space-y-4">
+            <span class="inline-block px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-300 text-xs font-mono">FORM 2DID SYSTEM ENHANCEMENT</span>
+            <h3 class="text-2xl font-bold text-white">Form 2DID 頁面四大核心功能優化</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              針對既有的 Form 2DID 作業系統進行全面性功能擴充，涵蓋彈性上傳路徑、跨動作紀錄整合查詢、FTP 自動撈檔與高安全性防呆刪除機制。
+            </p>
+
+            <div class="grid sm:grid-cols-2 gap-3.5 text-sm">
+              <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-700/80">
+                <div class="text-cyan-300 font-bold mb-1.5">1. 上傳路徑彈性化</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  在原本 Upload 頁面多加了<strong>目的地的下拉選單</strong>，可以自己挑要傳去哪，並如有新的需求還可以擴充增加更多路徑。
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-700/80">
+                <div class="text-blue-300 font-bold mb-1.5">2. 查詢更方便</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Query 頁面可以用<strong>使用者、檔名或時間區間</strong>來篩選，而且把 <code>Upload</code> 跟 <code>Delete</code> 的紀錄整合在一起看，找紀錄快很多。
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-700/80">
+                <div class="text-teal-300 font-bold mb-1.5">3. 支援下載檔案</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  新做的 Download 功能只要輸入 <code>Lot</code> 號，系統就會自己用 <strong>FTP</strong> 把對應的 Lot 檔案撈下來到本機。
+                </p>
+              </div>
+
+              <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-700/80">
+                <div class="text-rose-300 font-bold mb-1.5">4. 安全刪除與備份機制</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  新增 Delete 功能刪掉指定的 <code>REELID</code> 資料：先檢查資料是否存在、<strong>限制僅能輸入英數字元</strong>防誤刪，刪除後自動備份 <code>REELID</code> 與 <code>USERID</code> 至 Database。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右側：Delete 防呆與備份機制互動模擬器 -->
+          <div class="lg:col-span-5 bg-slate-950/90 p-5 rounded-xl border border-slate-700 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+                <span class="text-xs font-mono text-cyan-400 font-bold">Form 2DID · Delete 防呆與 DB 備份模擬</span>
+                <span class="text-[11px] font-mono text-emerald-400">SQL AUDIT ON</span>
+              </div>
+
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="text-slate-400 block mb-1">目標上傳路徑（Upload 動態下拉選單）</label>
+                  <select class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 font-mono">
+                    <option>/2DID_PROD/PATH_A (預設產線路徑)</option>
+                    <option>/2DID_PROD/PATH_B (客戶專案路徑)</option>
+                    <option>/2DID_BACKUP/ARCHIVE (備份歸檔區)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="text-slate-400 block mb-1">輸入欲刪除之 REELID（僅限英數字元防呆）</label>
+                  <div class="flex gap-2">
+                    <input id="reelIdInput" type="text" placeholder="例如：REEL2026A01 或輸入符號測試" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-400" />
+                    <button id="simDeleteReelBtn" class="px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-bold transition">
+                      執行 Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="reelDeleteResult" class="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed">
+              請輸入 REELID 測試字元防呆檢核（禁止特殊符號）與刪除後自動寫入 Database 備份紀錄。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 7: eMap+ Git Hook 自動攔截檢查 -->
+      <div id="tab-2did-git" class="tab-panel hidden glass-card p-6 sm:p-8 rounded-2xl">
+        <div class="grid lg:grid-cols-12 gap-8">
+          <div class="lg:col-span-6 space-y-4">
+            <span class="inline-block px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 text-xs font-mono">GIT HOOK DEVOPS AUTOMATION</span>
+            <h3 class="text-2xl font-bold text-white">eMap+ Scenario XML 的 .ppk 金鑰自動檢查</h3>
+            <p class="text-slate-300 text-sm leading-relaxed">
+              過去開發團隊在發版合併（Merge）Scenario XML 設定檔時，若有人忘記設定 SFTP 的 <code>.ppk</code> 金鑰，會導致上線後的檔案傳輸直接異常中斷。
+            </p>
+            <div class="space-y-2.5 text-sm text-slate-300">
+              <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+                <strong class="text-cyan-300">① Git Hook 背景觸發：</strong>串接 <code>XmlCompareHook.exe</code>，在執行 Merge 時自動掃描異動的 XML 內容。
+              </div>
+              <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800">
+                <strong class="text-rose-300">② 缺失自動阻擋推送：</strong>只要抓到程式碼中未設定 <code>.ppk</code> 金鑰路徑，立即阻擋推送並提示錯誤，補齊後才予以放行。
+              </div>
+            </div>
+          </div>
+
+          <!-- Git Hook 互動演練器 -->
+          <div class="lg:col-span-6 bg-slate-950/90 p-5 rounded-xl border border-slate-700 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-mono text-rose-400 font-bold">eMap+ Scenario XML · Git Hook 自動攔截演練</span>
+                <span class="text-[11px] font-mono text-slate-400">XmlCompareHook.exe</span>
+              </div>
+              <p class="text-xs text-slate-300 mb-3">
+                試著直接點擊「執行 Git Merge 檢查」觀察攔截效果，再點擊「自動補齊 .ppk 金鑰」測試放行流程。
+              </p>
+
+              <textarea id="xmlHookEditor" rows="5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 font-mono text-xs text-cyan-200 focus:outline-none">&lt;ScenarioConfig&gt;
+  &lt;Protocol&gt;SFTP&lt;/Protocol&gt;
+  &lt;Host&gt;sftp.customer-gateway.internal&lt;/Host&gt;
+  &lt;PrivateKeyPath&gt;&lt;/PrivateKeyPath&gt;
+&lt;/ScenarioConfig&gt;</textarea>
+            </div>
+
+            <div class="mt-3 space-y-2.5">
+              <div class="flex gap-2">
+                <button id="testGitHookBtn" class="flex-1 py-2 px-3 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs transition">
+                  執行 Git Merge 檢查
+                </button>
+                <button id="fixPpkBtn" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold text-xs border border-slate-600 transition">
+                  自動補齊 .ppk 金鑰
+                </button>
+              </div>
+              <div id="gitHookResult" class="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+                點擊「執行 Git Merge 檢查」測試 XmlCompareHook.exe 自動防呆攔截效果。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第五部分：實習核心能力雷達圖與量化成果總結 -->
+  <section id="skills" class="py-16 border-t border-slate-800/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-12 reveal">
+        <div class="text-cyan-400 font-mono text-xs uppercase tracking-widest mb-2">05 / TECHNICAL COMPETENCY & REFLECTION</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white">實習技術成長雷達與核心貢獻</h2>
+      </div>
+
+      <div class="grid lg:grid-cols-12 gap-8 items-center reveal">
+        <!-- 雷達圖 -->
+        <div class="lg:col-span-6 glass-card p-6 rounded-2xl">
+          <h3 class="text-base font-bold text-white mb-4 text-center">IT 部門全端開發與自動化維運能力分佈</h3>
+          <div class="relative h-72 w-full">
+            <canvas id="skillsRadarChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 量化亮點卡片 -->
+        <div class="lg:col-span-6 grid sm:grid-cols-2 gap-4">
+          <div class="glass-card p-5 rounded-2xl">
+            <div class="text-3xl font-black text-cyan-400 font-mono mb-1">7 大項</div>
+            <div class="text-sm font-bold text-white mb-2">核心系統與工具專案</div>
+            <p class="text-xs text-slate-400 leading-relaxed">涵蓋 DC 傳輸、壓縮歸檔工具、一致性稽核、ColorBin、Tally、Form 2DID 與 Git Hook 優化。</p>
+          </div>
+
+          <div class="glass-card p-5 rounded-2xl">
+            <div class="text-3xl font-black text-blue-400 font-mono mb-1">v1.7.0</div>
+            <div class="text-sm font-bold text-white mb-2">C# 工具持續迭代演進</div>
+            <p class="text-xs text-slate-400 leading-relaxed">導入 ISO 週別分類、FTP 傳輸、Proxy 繞過與中文特殊字元相容性優化。</p>
+          </div>
+
+          <div class="glass-card p-5 rounded-2xl">
+            <div class="text-3xl font-black text-teal-400 font-mono mb-1">100%</div>
+            <div class="text-sm font-bold text-white mb-2">Git Hook 發版防呆攔截</div>
+            <p class="text-xs text-slate-400 leading-relaxed">透過 XmlCompareHook.exe 自動阻擋未配置 .ppk 金鑰之合併請求，杜絕上線異常。</p>
+          </div>
+
+          <div class="glass-card p-5 rounded-2xl">
+            <div class="text-3xl font-black text-indigo-400 font-mono mb-1">AI + 人工</div>
+            <div class="text-sm font-bold text-white mb-2">達哥 AI 協作與 UTR 雙重品保</div>
+            <p class="text-xs text-slate-400 leading-relaxed">善用企業內網 AI 加速除錯與雛形建置，並落實嚴格人工 Code Review 與 UTR 驗證。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 頁尾 -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-10 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <div class="font-bold text-slate-200 text-sm">
+        元智大學資訊管理學系 第三十一屆專業實習競賽報告
+      </div>
+      <div>
+        研究主題：自動化處理 ｜ 公司代號：H2 ｜ 實習單位：日月光（中壢廠 IT 部門FA_SD1） ｜ 輔導老師：詹前隆 ｜ 學生：林信琦 (1121621)
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 初始化 Lucide 圖示
+    lucide.createIcons();
+
+    // ==========================================
+    // 1. Web Audio API 科技音效合成器
+    // ==========================================
+    let audioCtx = null;
+
+    function playTone(freq = 520, duration = 0.08, type = 'sine', gainVal = 0.06) {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // 手機選單切換
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+      playTone(480, 0.06);
+    });
+
+    // ==========================================
+    // 2. 滾動進場動畫 (IntersectionObserver)
+    // ==========================================
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ==========================================
+    // 3. Chart.js 圖表初始化
+    // ==========================================
+    // (A) 通勤時間對比長條圖
+    const commuteCtx = document.getElementById('commuteChart').getContext('2d');
+    new Chart(commuteCtx, {
+      type: 'bar',
+      data: {
+        labels: ['元智大學 ↔ 日月光中壢廠', '雙北地區 ↔ 日月光中壢廠 (台鐵)', '元智大學 ↔ 新竹科學園區', '元智大學 ↔ 台北內湖/南港園區'],
+        datasets: [{
+          label: '單程平均通勤時間（分鐘）',
+          data: [7, 40, 55, 75],
+          backgroundColor: [
+            'rgba(0, 229, 255, 0.85)',
+            'rgba(59, 130, 246, 0.7)',
+            'rgba(100, 116, 139, 0.55)',
+            'rgba(100, 116, 139, 0.45)'
+          ],
+          borderColor: ['#00E5FF', '#3B82F6', '#64748B', '#475569'],
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` 約 ${ctx.raw} 分鐘`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+            ticks: { color: '#94A3B8', font: { size: 11 } }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#E2E8F0', font: { size: 11, weight: '600' } }
+          }
+        }
+      }
+    });
+
+    // (B) 實習核心技術雷達圖
+    const radarCtx = document.getElementById('skillsRadarChart').getContext('2d');
+    new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: [
+          'C# WinForms 工具開發',
+          'SQL 資料庫查詢與維護',
+          'FTP / SFTP 自動化傳輸',
+          '企業 AI (達哥) 協作除錯',
+          'Git Hook 發版防呆',
+          'UTR 測試與系統分析'
+        ],
+        datasets: [{
+          label: '實習能力掌握度 (%)',
+          data: [92, 90, 95, 88, 91, 94],
+          backgroundColor: 'rgba(0, 229, 255, 0.18)',
+          borderColor: '#00E5FF',
+          pointBackgroundColor: '#00E5FF',
+          pointBorderColor: '#070D19',
+          pointHoverBackgroundColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 50,
+            max: 100,
+            ticks: { display: false },
+            grid: { color: 'rgba(148, 163, 184, 0.18)' },
+            angleLines: { color: 'rgba(148, 163, 184, 0.18)' },
+            pointLabels: {
+              color: '#E2E8F0',
+              font: { size: 11, weight: '600' }
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // ==========================================
+    // 4. 直接點擊切換五階段資料流卡片
+    // ==========================================
+    const stageData = {
+      1: {
+        freq: 440,
+        subtitle: '【階段 1/5】檢視客戶需求表單，查詢資料庫歷史紀錄並測試遠端 FTP 連線是否暢通。'
+      },
+      2: {
+        freq: 523.25,
+        subtitle: '【階段 2/5】於 Visual Studio 設定 XML 過濾規則（排除 CORR 與 .txt），善用 AI 輔助並人工校驗。'
+      },
+      3: {
+        freq: 587.33,
+        subtitle: '【階段 3/5】執行 FTPSCAN 掃描測試區檔案並集中至 WORKSPACE（若僅需備份至此即完成）。'
+      },
+      4: {
+        freq: 659.25,
+        subtitle: '【階段 4/5】針對下載需求執行 FILEUPDATE 轉移至 HOTFILES，再透過 DC_FILTER 派送目標目錄。'
+      },
+      5: {
+        freq: 880,
+        subtitle: '【階段 5/5】開啟 ClickOnce 確認執行狀態為 Success，並整理 SQL 語法與截圖產出完整 UTR 報告！'
+      }
+    };
+
+    const stageNodes = document.querySelectorAll('.stage-node');
+    stageNodes.forEach(node => {
+      node.addEventListener('click', () => {
+        const stageNum = parseInt(node.getAttribute('data-stage'), 10);
+        const info = stageData[stageNum];
+        if (!info) return;
+
+        stageNodes.forEach(n => n.classList.remove('node-active'));
+        node.classList.add('node-active');
+
+        document.getElementById('avTimer').textContent = `STAGE ${stageNum} / 5`;
+        document.getElementById('avSubtitle').textContent = info.subtitle;
+        document.getElementById('avProgressBar').style.width = `${(stageNum / 5) * 100}%`;
+        playTone(info.freq, 0.12, 'triangle', 0.07);
+      });
+    });
+
+    // ==========================================
+    // 5. 七大專案分頁切換與各工具互動模擬器
+    // ==========================================
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-tab');
+        tabBtns.forEach(b => {
+          b.classList.remove('bg-cyan-500', 'text-slate-950', 'font-bold', 'shadow-md');
+          b.classList.add('bg-slate-800/90', 'text-slate-300', 'font-semibold');
+        });
+        btn.classList.remove('bg-slate-800/90', 'text-slate-300', 'font-semibold');
+        btn.classList.add('bg-cyan-500', 'text-slate-950', 'font-bold', 'shadow-md');
+
+        tabPanels.forEach(p => p.classList.add('hidden'));
+        const activePanel = document.getElementById(target);
+        if (activePanel) {
+          activePanel.classList.remove('hidden');
+        }
+        playTone(580, 0.07);
+      });
+    });
+
+    // 模擬器 A: C# 壓縮工具 v1.7.0
+    document.getElementById('runZipSimBtn').addEventListener('click', () => {
+      const days = parseInt(document.getElementById('simDays').value, 10);
+      const totalFiles = days * 120;
+      const logBox = document.getElementById('zipLogBox');
+      const doneEl = document.getElementById('zipDone');
+      const etaEl = document.getElementById('zipEta');
+
+      logBox.innerHTML = '';
+      doneEl.textContent = '0';
+      etaEl.textContent = `${days} 秒`;
+      playTone(620, 0.09);
+
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        const processed = Math.min(totalFiles, Math.round((step / days) * totalFiles));
+        doneEl.textContent = `${processed} / ${totalFiles}`;
+        etaEl.textContent = `${Math.max(0, days - step)} 秒`;
+
+        const div = document.createElement('div');
+        div.innerHTML = `<span class="text-cyan-400">[Day ${step}/${days}]</span> 已完成 ZIP 壓縮並透過 FTP 歸檔至 <span class="text-emerald-300">/2026W20/</span> (中文檔名校驗 OK)`;
+        logBox.appendChild(div);
+        logBox.scrollTop = logBox.scrollHeight;
+        playTone(440 + step * 35, 0.05, 'sine', 0.04);
+
+        if (step >= days) {
+          clearInterval(interval);
+          const endDiv = document.createElement('div');
+          endDiv.className = 'text-emerald-400 font-bold pt-1';
+          endDiv.textContent = `[COMPLETE] 全部 ${totalFiles} 筆檔案搬移完成！CSV 匯總明細報表已產出。`;
+          logBox.appendChild(endDiv);
+          logBox.scrollTop = logBox.scrollHeight;
+          playTone(880, 0.14, 'triangle', 0.08);
+        }
+      }, 380);
+    });
+
+    // 模擬器 B: ColorBin 晶圓圖視覺格子生成
+    const waferGridEl = document.getElementById('waferMapGrid');
+    const waferPattern = [
+      0,0,0,1,1,1,1,1,1,0,0,0,
+      0,0,1,1,1,2,1,1,1,1,0,0,
+      0,1,1,1,1,1,1,3,1,1,1,0,
+      1,1,1,2,1,1,1,1,1,1,1,1,
+      1,1,1,1,1,1,1,1,2,1,1,1,
+      1,1,3,1,1,1,1,1,1,1,1,1,
+      1,1,1,1,1,1,2,1,1,3,1,1,
+      0,1,1,1,1,1,1,1,1,1,1,0,
+      0,0,1,1,2,1,1,1,1,1,0,0,
+      0,0,0,1,1,1,1,1,1,0,0,0
+    ];
+    waferPattern.forEach(cell => {
+      const div = document.createElement('div');
+      div.className = 'h-4 rounded-sm transition hover:scale-125';
+      if (cell === 0) div.classList.add('bg-transparent');
+      if (cell === 1) div.classList.add('bg-emerald-400/85');
+      if (cell === 2) div.classList.add('bg-amber-400/90');
+      if (cell === 3) div.classList.add('bg-rose-500/90');
+      waferGridEl.appendChild(div);
+    });
+
+    // 模擬器 C: Git Hook XmlCompareHook.exe 攔截檢查
+    document.getElementById('testGitHookBtn').addEventListener('click', () => {
+      const xmlVal = document.getElementById('xmlHookEditor').value;
+      const resultBox = document.getElementById('gitHookResult');
+      if (!xmlVal.includes('.ppk')) {
+        resultBox.innerHTML = '<span class="text-rose-400 font-bold">[BLOCKED BY XmlCompareHook.exe]</span> 偵測到 Scenario XML 缺少 SFTP <code>.ppk</code> 金鑰設定，已自動阻止 Git Merge 推送！';
+        playTone(240, 0.16, 'sawtooth', 0.07);
+      } else {
+        resultBox.innerHTML = '<span class="text-emerald-400 font-bold">[PASSED]</span> 驗證通過！已偵測到有效 <code>.ppk</code> 金鑰設定，允許合併發版。';
+        playTone(780, 0.14, 'triangle', 0.08);
+      }
+    });
+
+    // 模擬器 D: Form 2DID Delete 英數字防呆與 DB 備份演練
+    document.getElementById('simDeleteReelBtn').addEventListener('click', () => {
+      const reelVal = document.getElementById('reelIdInput').value.trim();
+      const resultEl = document.getElementById('reelDeleteResult');
+
+      if (!reelVal) {
+        resultEl.innerHTML = '<span class="text-amber-400 font-bold">[WARNING]</span> 請先輸入欲刪除的 REELID！';
+        playTone(320, 0.08);
+        return;
+      }
+
+      // 驗證僅能包含英文與數字
+      if (!/^[a-zA-Z0-9]+$/.test(reelVal)) {
+        resultEl.innerHTML = '<span class="text-rose-400 font-bold">[BLOCKED]</span> 格式錯誤！REELID 禁止輸入英文與數字以外的特殊字元，已攔截刪除操作。';
+        playTone(240, 0.15, 'sawtooth', 0.06);
+        return;
+      }
+
+      resultEl.innerHTML = `<span class="text-emerald-400 font-bold">[SUCCESS]</span> 1. 已確認 <code>${reelVal}</code> 存在於系統並完成刪除。<br>2. 已自動將 <code>REELID: ${reelVal}</code> 與 <code>USERID: 1121621</code> 備份寫入 Database！`;
+      playTone(760, 0.12, 'triangle', 0.07);
+    });
+
+    document.getElementById('fixPpkBtn').addEventListener('click', () => {
+      document.getElementById('xmlHookEditor').value = `<ScenarioConfig>
+  <Protocol>SFTP</Protocol>
+  <Host>sftp.customer-gateway.internal</Host>
+  <PrivateKeyPath>/keys/ase_client_auth.ppk</PrivateKeyPath>
+</ScenarioConfig>`;
+      playTone(620, 0.07);
+    });
+  </script>
+</body>
+</html>
